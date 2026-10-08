@@ -1,4 +1,5 @@
 import express from "express";
+import projectRoutes from "./routes/projectRoutes";
 
 const app = express();
 
@@ -9,5 +10,7 @@ app.get("/", (req, res) => {
         message: "Managing Projects API is running!"
     });
 });
+
+app.use("/api/projects", projectRoutes);
 
 export default app;
