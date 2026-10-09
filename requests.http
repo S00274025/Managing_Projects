@@ -1,0 +1,153 @@
+
+@baseUrl = http://localhost:3000
+@token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWM5NTVmM2U5YTU0ZmEzNWFmZWNiOTkiLCJpYXQiOjE3OTE1ODAwNTIsImV4cCI6MTc5MTY2NjQ1Mn0.13QcW6uEX2ls7oGJ80OIjKqWp9BEXoikgQOFPfOAsiY
+@userId = 6ac955f3e9a54fa35afecb99
+@projectId =6ac957a5e9a54fa35afecb9a
+@taskId = 6ac957f3e9a54fa35afecb9b
+
+### 1. API health check
+GET {{baseUrl}}/
+
+### 2. Register a new user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "REST Test User",
+  "email": "rest-test-2026@example.com",
+  "password": "TestPassword123"
+}
+
+### 3. Register with invalid data - should fail
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "",
+  "email": "not-an-email",
+  "password": "123"
+}
+
+### 4. Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "rest-test-2026@example.com",
+  "password": "TestPassword123"
+}
+
+### 5. Get current user - requires JWT
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### 6. Get current user without token - should fail
+GET {{baseUrl}}/api/auth/me
+
+### 7. Get all projects
+GET {{baseUrl}}/api/projects
+Authorization: Bearer {{token}}
+
+### 8. Create project
+POST {{baseUrl}}/api/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "REST Client Test Project",
+  "description": "Project created using requests.http",
+  "owner": "{{userId}}"
+}
+
+### 9. Create project with invalid data - should fail
+POST {{baseUrl}}/api/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "",
+  "description": "Invalid project",
+  "owner": "wrong-id"
+}
+
+### 10. Get project by ID
+GET {{baseUrl}}/api/projects/{{projectId}}
+Authorization: Bearer {{token}}
+
+### 11. Update project
+PATCH {{baseUrl}}/api/projects/{{projectId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated REST Client Project"
+}
+
+### 12. Update nonexistent project - should fail
+PATCH {{baseUrl}}/api/projects/507f1f77bcf86cd799439011
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Does not exist"
+}
+
+### 13. Delete project
+DELETE {{baseUrl}}/api/projects/{{projectId}}
+Authorization: Bearer {{token}}
+
+### 14. Get all tasks
+GET {{baseUrl}}/api/tasks
+Authorization: Bearer {{token}}
+
+### 15. Create task
+POST {{baseUrl}}/api/tasks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Test REST Client requests",
+  "description": "Verify task creation",
+  "status": "todo",
+  "priority": "high",
+  "project": "{{projectId}}"
+}
+
+### 16. Create task with invalid data - should fail
+POST {{baseUrl}}/api/tasks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "",
+  "status": "invalid",
+  "priority": "urgent",
+  "project": "wrong-id"
+}
+
+### 17. Get task by ID
+GET {{baseUrl}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+
+### 18. Update task
+PATCH {{baseUrl}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Updated task title",
+  "status": "in_progress"
+}
+
+### 19. Update nonexistent task - should fail
+PATCH {{baseUrl}}/api/tasks/507f1f77bcf86cd799439011
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Does not exist"
+}
+
+### 20. Delete task
+DELETE {{baseUrl}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
