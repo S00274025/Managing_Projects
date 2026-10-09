@@ -1,16 +1,19 @@
 
 import { Router, Response } from "express";
 import { register, login } from "../controllers/authController";
-import {
-  authenticateToken,
-  AuthRequest,
-} from "../middleware/authMiddleware";
+import { authenticateToken,AuthRequest, } from "../middleware/authMiddleware";
+import { validateBody } from "../middleware/validate";
+import { createUserSchema, loginSchema } from "../validators/userValidator";
 import { User } from "../models/User";
 
 const router = Router();
 
-router.post("/register", register);
-router.post("/login", login);
+router.post(
+  "/register",
+  validateBody(createUserSchema),
+  register
+);
+router.post("/login", validateBody(loginSchema), login);
 
 router.get(
   "/me",

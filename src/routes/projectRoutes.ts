@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticateToken } from "../middleware/authMiddleware";
-
+import { validateBody } from "../middleware/validate";
 import {
     createProject,
     getProjects,
@@ -8,16 +8,26 @@ import {
     updateProject,
     deleteProject
 } from "../controllers/projectControllers";
+import { createProjectSchema,updateProjectSchema } from "../validators/projectValidator";
 
 const router = Router();
+router.post(
+  "/",
+  authenticateToken,
+  validateBody(createProjectSchema),
+  createProject
+);
 
-router.post("/",authenticateToken, createProject);
-
+router.patch(
+  "/:id",
+  authenticateToken,
+  validateBody(updateProjectSchema),
+  updateProject
+);
 router.get("/",authenticateToken, getProjects);
 
 router.get("/:id", authenticateToken, getProjectById);
 
-router.patch("/:id", authenticateToken, updateProject);
 
 router.delete("/:id", authenticateToken, deleteProject);
 
