@@ -2,10 +2,11 @@ import express from "express";
 import projectRoutes from "./routes/projectRoutes";
 import userRoutes from "./routes/userRoutes";
 import taskRoutes from "./routes/taskRoutes";
-
+import { notFoundHandler,  errorHandler,} from "./middleware/errorHandler";
 const app = express();
 
 app.use(express.json());
+
 
 app.get("/", (req, res) => {
     res.json({
@@ -16,5 +17,8 @@ app.get("/", (req, res) => {
 app.use("/api/projects", projectRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;
