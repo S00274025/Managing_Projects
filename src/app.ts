@@ -4,11 +4,13 @@ import userRoutes from "./routes/userRoutes";
 import taskRoutes from "./routes/taskRoutes";
 import { notFoundHandler,  errorHandler,} from "./middleware/errorHandler";
 import authRoutes from "./routes/authRoutes";
+import swaggerUi from "swagger-ui-express";
+import { openapiDocument } from "./docs/openapi";
 
 const app = express();
 
 app.use(express.json());
-
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openapiDocument));
 
 app.get("/", (req, res) => {
     res.json({
