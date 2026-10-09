@@ -1,9 +1,11 @@
 import { Schema, model } from "mongoose";
 
 export interface IUser {
-    name: string;
-    email: string;
-    password: string;
+  name: string;
+  email: string;
+  password: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const userSchema = new Schema<IUser>(
@@ -26,6 +28,7 @@ const userSchema = new Schema<IUser>(
             type: String,
             required: true,
             minlength: 6,
+            select: false,
         },
     },
     {

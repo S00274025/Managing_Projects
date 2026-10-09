@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
- "scripts": {
-  "build": "tsc",
-  "start": "node dist/server.js"
-},
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/S00274025/Managing_Projects.git"
@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/S00274025/Managing_Projects#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "dotenv": "^18.0.6",
     "express": "^5.2.1",
     "mongoose": "^9.11.1"
