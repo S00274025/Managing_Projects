@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { authenticateToken } from "../middleware/authMiddleware";
 
 import {
     createProject,
@@ -10,14 +11,14 @@ import {
 
 const router = Router();
 
-router.post("/", createProject);
+router.post("/",authenticateToken, createProject);
 
-router.get("/", getProjects);
+router.get("/",authenticateToken, getProjects);
 
-router.get("/:id", getProjectById);
+router.get("/:id", authenticateToken, getProjectById);
 
-router.patch("/:id", updateProject);
+router.patch("/:id", authenticateToken, updateProject);
 
-router.delete("/:id", deleteProject);
+router.delete("/:id", authenticateToken, deleteProject);
 
 export default router;

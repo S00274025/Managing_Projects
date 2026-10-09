@@ -1,5 +1,7 @@
 
 import { Router } from "express";
+import { authenticateToken } from "../middleware/authMiddleware";
+
 import {
   createTask,
   getTasks,
@@ -10,10 +12,10 @@ import {
 
 const router = Router();
 
-router.post("/", createTask);
-router.get("/", getTasks);
-router.get("/:id", getTaskById);
-router.patch("/:id", updateTask);
-router.delete("/:id", deleteTask);
+router.post("/",authenticateToken, createTask);
+router.get("/", authenticateToken, getTasks);
+router.get("/:id", authenticateToken, getTaskById);
+router.patch("/:id", authenticateToken, updateTask);
+router.delete("/:id", authenticateToken, deleteTask);
 
 export default router;
