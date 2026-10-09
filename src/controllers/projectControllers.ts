@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import { Project } from "../models/Project";
+import { AuthRequest } from "../middleware/authMiddleware";
 
 export const createProject = async (
     req: Request,
