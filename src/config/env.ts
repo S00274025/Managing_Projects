@@ -21,4 +21,7 @@ if (!jwtSecret) {
 
 const JWT_SECRET: string = jwtSecret;
 
-export { PORT, MONGODB_URI, JWT_SECRET };
+// Part 2: origin of the Angular client, used by CORS
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:4200";
+
+export { PORT, MONGODB_URI, JWT_SECRET, CLIENT_URL };

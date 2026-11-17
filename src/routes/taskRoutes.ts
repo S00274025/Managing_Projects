@@ -1,6 +1,8 @@
 
 import { Router } from "express";
 import { authenticateToken } from "../middleware/authMiddleware";
+import { validateBody } from "../middleware/validate";
+import { createTaskSchema, updateTaskSchema } from "../validators/taskValidator";
 
 import {
   createTask,
@@ -12,10 +14,10 @@ import {
 
 const router = Router();
 
-router.post("/",authenticateToken, createTask);
+router.post("/", authenticateToken, validateBody(createTaskSchema), createTask);
 router.get("/", authenticateToken, getTasks);
 router.get("/:id", authenticateToken, getTaskById);
-router.patch("/:id", authenticateToken, updateTask);
+router.patch("/:id", authenticateToken, validateBody(updateTaskSchema), updateTask);
 router.delete("/:id", authenticateToken, deleteTask);
 
 export default router;

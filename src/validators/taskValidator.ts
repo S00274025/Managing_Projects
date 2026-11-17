@@ -13,7 +13,7 @@ export const createTaskSchema = z.object({
   priority: z.enum(["low", "medium", "high"]).optional(),
   project: objectIdSchema,
   assignedTo: objectIdSchema.optional(),
-  dueDate: z.string().datetime().optional(),
+  dueDate: z.iso.datetime().optional(),
 });
 
 export const updateTaskSchema = z.object({
@@ -23,7 +23,7 @@ export const updateTaskSchema = z.object({
   priority: z.enum(["low", "medium", "high"]).optional(),
   project: objectIdSchema.optional(),
   assignedTo: objectIdSchema.nullable().optional(),
-  dueDate: z.string().datetime().nullable().optional(),
+  dueDate: z.iso.datetime().nullable().optional(),
 }).refine(
   (data) => Object.keys(data).length > 0,
   { message: "At least one field must be provided" }

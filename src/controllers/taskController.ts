@@ -292,7 +292,7 @@ export const updateTask = async (
 
     if (updates.assignedTo !== undefined) {
       if (updates.assignedTo === null || updates.assignedTo === "") {
-        updates.assignedTo = undefined;
+        updates.assignedTo = null; // Part 2: store null so the field is really cleared when the user removes it
       } else {
         if (
           typeof updates.assignedTo !== "string" ||
@@ -317,7 +317,7 @@ export const updateTask = async (
 
     if (updates.dueDate !== undefined) {
       if (updates.dueDate === null || updates.dueDate === "") {
-        updates.dueDate = undefined;
+        updates.dueDate = null; // Part 2: store null so the field is really cleared when the user removes it
       } else {
         const parsedDate = new Date(updates.dueDate as string);
 
@@ -337,7 +337,7 @@ export const updateTask = async (
     }
 
     const task = await Task.findByIdAndUpdate(taskId, updates, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     })
       .populate("project", "name")

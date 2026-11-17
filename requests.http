@@ -1,9 +1,9 @@
 
 @baseUrl = http://localhost:3000
-@token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWM5NTVmM2U5YTU0ZmEzNWFmZWNiOTkiLCJpYXQiOjE3OTE1ODAwNTIsImV4cCI6MTc5MTY2NjQ1Mn0.13QcW6uEX2ls7oGJ80OIjKqWp9BEXoikgQOFPfOAsiY
+@token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWM5NTVmM2U5YTU0ZmEzNWFmZWNiOTkiLCJpYXQiOjE3OTE3NTA4MDMsImV4cCI6MTc5MTgzNzIwM30.1jA92gKGxMge4ZS9B_ZC9sErrCPdX7ZSQjzNNLAEt2o
 @userId = 6ac955f3e9a54fa35afecb99
-@projectId =6ac957a5e9a54fa35afecb9a
-@taskId = 6ac957f3e9a54fa35afecb9b
+@projectId =6acbf2d107ec6969c1e9bf6f
+@taskId = 6acbf2e007ec6969c1e9bf70
 
 ### 1. API health check
 GET {{baseUrl}}/
@@ -151,3 +151,27 @@ Content-Type: application/json
 ### 20. Delete task
 DELETE {{baseUrl}}/api/tasks/{{taskId}}
 Authorization: Bearer {{token}}
+
+### Part 2: search projects by name (case insensitive)
+GET {{baseUrl}}/api/projects?search=rest
+Authorization: Bearer {{token}}
+
+### Part 2: create project without owner - owner is taken from the token
+POST {{baseUrl}}/api/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Project with owner from token"
+}
+
+### Part 2: create task with invalid priority - should fail Zod validation (400)
+POST {{baseUrl}}/api/tasks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Bad task",
+  "project": "{{projectId}}",
+  "priority": "urgent"
+}
