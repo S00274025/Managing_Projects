@@ -9,23 +9,11 @@ export const createProject = async (
     res: Response
 ): Promise<void> => {
     try {
+        // req.body has already been validated by createProjectSchema (zod) in the route,
+        // so name and owner do not need to be checked again here.
         const { name, description, members } = req.body;
-        // Part 2: if no owner is sent, the logged in user (from the JWT) is the owner
+        // if no owner is sent, the logged in user (from the JWT) is the owner
         const owner = req.body.owner ?? (req as AuthRequest).userId;
-
-        if (!name || !owner) {
-            res.status(400).json({
-                message: "Name and owner are required"
-            });
-            return;
-        }
-
-        if (!Types.ObjectId.isValid(owner)) {
-            res.status(400).json({
-                message: "Invalid owner ID"
-            });
-            return;
-        }
 
         const project = await Project.create({
             name,

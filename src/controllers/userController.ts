@@ -8,27 +8,11 @@ export const createUser = async (
   res: Response
 ): Promise<void> => {
   try {
+    // req.body has already been validated by createUserSchema (zod) in the route:
+    // name is trimmed, email is trimmed + lowercased, password is at least 6 characters.
     const { name, email, password } = req.body;
 
-    if (
-      typeof name !== "string" ||
-      typeof email !== "string" ||
-      typeof password !== "string" ||
-      !name.trim() ||
-      !email.trim() ||
-      password.length < 6
-    ) {
-      res.status(400).json({
-        message: "Name, valid email and password (minimum 6 characters) are required",
-      });
-      return;
-    }
-
-    const normalizedEmail = email.trim().toLowerCase();
-
-    const existingUser = await User.findOne({
-      email: normalizedEmail,
-    });
+    const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       res.status(409).json({
@@ -40,8 +24,8 @@ export const createUser = async (
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name: name.trim(),
-      email: normalizedEmail,
+      name,
+      email,
       password: hashedPassword,
     });
 

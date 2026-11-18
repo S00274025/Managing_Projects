@@ -10,6 +10,9 @@ export const createTask = async (
   res: Response
 ): Promise<void> => {
   try {
+    // req.body has already been validated by createTaskSchema (zod) in the route:
+    // title, status, priority, ID formats and the date format are all checked there.
+    // Here we only check things zod cannot know - whether the project/user exist in the database.
     const {
       title,
       description,
@@ -20,43 +23,6 @@ export const createTask = async (
       dueDate,
     } = req.body;
 
-    if (typeof title !== "string" || !title.trim()) {
-      res.status(400).json({
-        message: "Task title is required",
-      });
-      return;
-    }
-
-    if (
-      typeof project !== "string" ||
-      !mongoose.isValidObjectId(project)
-    ) {
-      res.status(400).json({
-        message: "A valid project ID is required",
-      });
-      return;
-    }
-
-    if (
-      status !== undefined &&
-      !["todo", "in_progress", "done"].includes(status)
-    ) {
-      res.status(400).json({
-        message: "Invalid task status",
-      });
-      return;
-    }
-
-    if (
-      priority !== undefined &&
-      !["low", "medium", "high"].includes(priority)
-    ) {
-      res.status(400).json({
-        message: "Invalid task priority",
-      });
-      return;
-    }
-
     const projectExists = await Project.findById(project);
 
     if (!projectExists) {
@@ -66,19 +32,7 @@ export const createTask = async (
       return;
     }
 
-    let assignedUserId: string | undefined;
-
-    if (assignedTo !== undefined && assignedTo !== null && assignedTo !== "") {
-      if (
-        typeof assignedTo !== "string" ||
-        !mongoose.isValidObjectId(assignedTo)
-      ) {
-        res.status(400).json({
-          message: "Invalid assigned user ID",
-        });
-        return;
-      }
-
+    if (assignedTo !== undefined) {
       const assignedUser = await User.findById(assignedTo);
 
       if (!assignedUser) {
@@ -87,31 +41,16 @@ export const createTask = async (
         });
         return;
       }
-
-      assignedUserId = assignedTo;
-    }
-
-    let parsedDueDate: Date | undefined;
-
-    if (dueDate !== undefined && dueDate !== null && dueDate !== "") {
-      parsedDueDate = new Date(dueDate);
-
-      if (Number.isNaN(parsedDueDate.getTime())) {
-        res.status(400).json({
-          message: "Invalid due date",
-        });
-        return;
-      }
     }
 
     const task = await Task.create({
-      title: title.trim(),
+      title,
       description,
       status,
       priority,
       project,
-      assignedTo: assignedUserId,
-      dueDate: parsedDueDate,
+      assignedTo,
+      dueDate: dueDate !== undefined ? new Date(dueDate) : undefined,
     });
 
     res.status(201).json(task);
@@ -217,69 +156,12 @@ export const updateTask = async (
       return;
     }
 
-    const allowedFields = [
-      "title",
-      "description",
-      "status",
-      "priority",
-      "project",
-      "assignedTo",
-      "dueDate",
-    ];
-
-    const updates: Record<string, unknown> = {};
-
-    for (const field of allowedFields) {
-      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
-        updates[field] = req.body[field];
-      }
-    }
-
-    if (
-      updates.title !== undefined &&
-      (typeof updates.title !== "string" || !updates.title.trim())
-    ) {
-      res.status(400).json({
-        message: "Task title cannot be empty",
-      });
-      return;
-    }
-
-    if (
-      updates.status !== undefined &&
-      !["todo", "in_progress", "done"].includes(
-        updates.status as string
-      )
-    ) {
-      res.status(400).json({
-        message: "Invalid task status",
-      });
-      return;
-    }
-
-    if (
-      updates.priority !== undefined &&
-      !["low", "medium", "high"].includes(
-        updates.priority as string
-      )
-    ) {
-      res.status(400).json({
-        message: "Invalid task priority",
-      });
-      return;
-    }
+    // req.body has already been validated by updateTaskSchema (zod) in the route.
+    // zod also removes any fields that are not in the schema, so req.body
+    // only contains fields that are allowed to be updated.
+    const updates: Record<string, unknown> = { ...req.body };
 
     if (updates.project !== undefined) {
-      if (
-        typeof updates.project !== "string" ||
-        !mongoose.isValidObjectId(updates.project)
-      ) {
-        res.status(400).json({
-          message: "Invalid project ID",
-        });
-        return;
-      }
-
       const projectExists = await Project.findById(updates.project);
 
       if (!projectExists) {
@@ -290,50 +172,21 @@ export const updateTask = async (
       }
     }
 
-    if (updates.assignedTo !== undefined) {
-      if (updates.assignedTo === null || updates.assignedTo === "") {
-        updates.assignedTo = null; // Part 2: store null so the field is really cleared when the user removes it
-      } else {
-        if (
-          typeof updates.assignedTo !== "string" ||
-          !mongoose.isValidObjectId(updates.assignedTo)
-        ) {
-          res.status(400).json({
-            message: "Invalid assigned user ID",
-          });
-          return;
-        }
+    // null means "remove the assigned user", so only look the user up when an ID is sent
+    if (updates.assignedTo) {
+      const assignedUser = await User.findById(updates.assignedTo);
 
-        const assignedUser = await User.findById(updates.assignedTo);
-
-        if (!assignedUser) {
-          res.status(404).json({
-            message: "Assigned user not found",
-          });
-          return;
-        }
+      if (!assignedUser) {
+        res.status(404).json({
+          message: "Assigned user not found",
+        });
+        return;
       }
     }
 
-    if (updates.dueDate !== undefined) {
-      if (updates.dueDate === null || updates.dueDate === "") {
-        updates.dueDate = null; // Part 2: store null so the field is really cleared when the user removes it
-      } else {
-        const parsedDate = new Date(updates.dueDate as string);
-
-        if (Number.isNaN(parsedDate.getTime())) {
-          res.status(400).json({
-            message: "Invalid due date",
-          });
-          return;
-        }
-
-        updates.dueDate = parsedDate;
-      }
-    }
-
-    if (typeof updates.title === "string") {
-      updates.title = updates.title.trim();
+    // null means "remove the due date", otherwise turn the ISO string into a Date
+    if (typeof updates.dueDate === "string") {
+      updates.dueDate = new Date(updates.dueDate);
     }
 
     const task = await Task.findByIdAndUpdate(taskId, updates, {
