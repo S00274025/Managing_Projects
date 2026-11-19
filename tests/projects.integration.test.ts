@@ -94,6 +94,47 @@ describe("Projects API integration tests", () => {
     expect(response.body.name).toBe("Updated Project Name");
   });
 
+  it("should replace a project with PUT", async () => {
+    const project = await Project.create({
+      name: "Old Project Name",
+      description: "Old description",
+      owner: testUserId,
+    });
+
+    const response = await request(app)
+      .put(`/api/projects/${project._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "New Project Name", description: "New description" });
+
+    expect(response.status).toBe(200);
+    expect(response.body.name).toBe("New Project Name");
+    expect(response.body.description).toBe("New description");
+  });
+
+  it("should reject a PUT with missing fields", async () => {
+    const project = await Project.create({
+      name: "Project Name",
+      owner: testUserId,
+    });
+
+    // PUT is a full update, so description must be sent too
+    const response = await request(app)
+      .put(`/api/projects/${project._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "Only the name" });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("should return 404 for a PUT on a project that does not exist", async () => {
+    const response = await request(app)
+      .put(`/api/projects/${new Types.ObjectId()}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "Missing", description: "" });
+
+    expect(response.status).toBe(404);
+  });
+
   it("should delete a project", async () => {
     const project = await Project.create({
       name: "Project to Delete",

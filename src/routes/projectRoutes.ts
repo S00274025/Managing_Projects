@@ -8,7 +8,11 @@ import {
     updateProject,
     deleteProject
 } from "../controllers/projectControllers";
-import { createProjectSchema,updateProjectSchema } from "../validators/projectValidator";
+import {
+    createProjectSchema,
+    replaceProjectSchema,
+    updateProjectSchema
+} from "../validators/projectValidator";
 
 const router = Router();
 router.post(
@@ -16,6 +20,15 @@ router.post(
   authenticateToken,
   validateBody(createProjectSchema),
   createProject
+);
+
+// PUT and PATCH use the same controller - the difference is the schema:
+// PUT requires all fields (full update), PATCH accepts only some of them (partial update)
+router.put(
+  "/:id",
+  authenticateToken,
+  validateBody(replaceProjectSchema),
+  updateProject
 );
 
 router.patch(

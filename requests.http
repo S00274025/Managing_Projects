@@ -92,6 +92,25 @@ Content-Type: application/json
   "name": "Does not exist"
 }
 
+### 12a. Replace project (PUT) - all fields must be sent
+PUT {{baseUrl}}/api/projects/{{projectId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Replaced REST Client Project",
+  "description": "Full update using PUT"
+}
+
+### 12b. Replace project with a missing field - should fail (400)
+PUT {{baseUrl}}/api/projects/{{projectId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Only the name is sent"
+}
+
 ### 13. Delete project
 DELETE {{baseUrl}}/api/projects/{{projectId}}
 Authorization: Bearer {{token}}
@@ -146,6 +165,30 @@ Content-Type: application/json
 
 {
   "title": "Does not exist"
+}
+
+### 19a. Replace task (PUT) - all fields must be sent, use null for "none"
+PUT {{baseUrl}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Replaced task title",
+  "description": null,
+  "status": "done",
+  "priority": "low",
+  "project": "{{projectId}}",
+  "assignedTo": null,
+  "dueDate": "2026-12-31T00:00:00.000Z"
+}
+
+### 19b. Replace task with missing fields - should fail (400)
+PUT {{baseUrl}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Only the title is sent"
 }
 
 ### 20. Delete task
