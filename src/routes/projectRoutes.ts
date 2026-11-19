@@ -22,8 +22,6 @@ router.post(
   createProject
 );
 
-// PUT and PATCH use the same controller - the difference is the schema:
-// PUT requires all fields (full update), PATCH accepts only some of them (partial update)
 router.put(
   "/:id",
   authenticateToken,

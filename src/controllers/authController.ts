@@ -10,8 +10,6 @@ export const register = async (
   res: Response
 ): Promise<void> => {
   try {
-    // req.body has already been validated by createUserSchema (zod) in the route:
-    // name is trimmed, email is trimmed + lowercased, password is at least 6 characters.
     const { name, email, password } = req.body;
 
     const existingUser = await User.findOne({ email });
@@ -65,7 +63,6 @@ export const login = async (
   res: Response
 ): Promise<void> => {
   try {
-    // req.body has already been validated by loginSchema (zod) in the route
     const { email, password } = req.body;
 
     const user = await User.findOne({ email }).select("+password");

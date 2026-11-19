@@ -41,7 +41,6 @@ describe("Tasks API", () => {
   });
 
   it("should reject a PUT task update with missing fields", async () => {
-    // PUT is a full update, so sending only the title is not enough
     const response = await request(app)
       .put(`/api/tasks/${new Types.ObjectId()}`)
       .set("Authorization", `Bearer ${token}`)

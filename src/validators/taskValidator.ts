@@ -16,8 +16,7 @@ export const createTaskSchema = z.object({
   dueDate: z.iso.datetime().optional(),
 });
 
-// PUT replaces the task, so every field must be sent.
-// description, assignedTo and dueDate can be null to say "this task has none".
+// full update
 export const replaceTaskSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
   description: z.string().max(2000).nullable(),
@@ -28,7 +27,7 @@ export const replaceTaskSchema = z.object({
   dueDate: z.iso.datetime().nullable(),
 });
 
-// PATCH changes only the fields that are sent
+// partial update
 export const updateTaskSchema = z.object({
   title: z.string().trim().min(1).max(200).optional(),
   description: z.string().max(2000).nullable().optional(),

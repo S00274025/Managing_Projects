@@ -117,7 +117,6 @@ describe("Projects API integration tests", () => {
       owner: testUserId,
     });
 
-    // PUT is a full update, so description must be sent too
     const response = await request(app)
       .put(`/api/projects/${project._id}`)
       .set("Authorization", `Bearer ${token}`)

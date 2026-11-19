@@ -10,9 +10,6 @@ export const createTask = async (
   res: Response
 ): Promise<void> => {
   try {
-    // req.body has already been validated by createTaskSchema (zod) in the route:
-    // title, status, priority, ID formats and the date format are all checked there.
-    // Here we only check things zod cannot know - whether the project/user exist in the database.
     const {
       title,
       description,
@@ -156,9 +153,6 @@ export const updateTask = async (
       return;
     }
 
-    // req.body has already been validated by updateTaskSchema (zod) in the route.
-    // zod also removes any fields that are not in the schema, so req.body
-    // only contains fields that are allowed to be updated.
     const updates: Record<string, unknown> = { ...req.body };
 
     if (updates.project !== undefined) {
@@ -172,7 +166,6 @@ export const updateTask = async (
       }
     }
 
-    // null means "remove the assigned user", so only look the user up when an ID is sent
     if (updates.assignedTo) {
       const assignedUser = await User.findById(updates.assignedTo);
 
@@ -184,7 +177,6 @@ export const updateTask = async (
       }
     }
 
-    // null means "remove the due date", otherwise turn the ISO string into a Date
     if (typeof updates.dueDate === "string") {
       updates.dueDate = new Date(updates.dueDate);
     }
