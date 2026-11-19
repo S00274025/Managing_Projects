@@ -40,15 +40,87 @@ export const openapiDocument = {
       },
       ProjectInput: {
         type: "object",
-        required: ["name", "owner"],
+        required: ["name"],
         properties: {
           name: { type: "string", maxLength: 100, example: "Website redesign" },
           description: { type: "string", maxLength: 1000 },
           owner: {
             type: "string",
             pattern: "^[a-fA-F0-9]{24}$",
+            description: "Defaults to the logged in user",
             example: "507f1f77bcf86cd799439011",
           },
+          members: {
+            type: "array",
+            items: { type: "string", pattern: "^[a-fA-F0-9]{24}$" },
+            description: "User IDs; duplicates are removed",
+          },
+        },
+      },
+      ProjectReplaceInput: {
+        type: "object",
+        required: ["name", "description", "members"],
+        properties: {
+          name: { type: "string", maxLength: 100, example: "Website redesign" },
+          description: { type: "string", maxLength: 1000, example: "" },
+          members: {
+            type: "array",
+            items: { type: "string", pattern: "^[a-fA-F0-9]{24}$" },
+          },
+        },
+      },
+      ProjectUpdateInput: {
+        type: "object",
+        minProperties: 1,
+        properties: {
+          name: { type: "string", maxLength: 100 },
+          description: { type: "string", maxLength: 1000 },
+          members: {
+            type: "array",
+            items: { type: "string", pattern: "^[a-fA-F0-9]{24}$" },
+          },
+        },
+      },
+      TaskReplaceInput: {
+        type: "object",
+        required: [
+          "title",
+          "description",
+          "status",
+          "priority",
+          "project",
+          "assignedTo",
+          "dueDate",
+        ],
+        properties: {
+          title: { type: "string", maxLength: 200, example: "Create homepage" },
+          description: { type: "string", maxLength: 2000, nullable: true },
+          status: { type: "string", enum: ["todo", "in_progress", "done"] },
+          priority: { type: "string", enum: ["low", "medium", "high"] },
+          project: { type: "string", pattern: "^[a-fA-F0-9]{24}$" },
+          assignedTo: {
+            type: "string",
+            pattern: "^[a-fA-F0-9]{24}$",
+            nullable: true,
+          },
+          dueDate: { type: "string", format: "date-time", nullable: true },
+        },
+      },
+      TaskUpdateInput: {
+        type: "object",
+        minProperties: 1,
+        properties: {
+          title: { type: "string", maxLength: 200 },
+          description: { type: "string", maxLength: 2000, nullable: true },
+          status: { type: "string", enum: ["todo", "in_progress", "done"] },
+          priority: { type: "string", enum: ["low", "medium", "high"] },
+          project: { type: "string", pattern: "^[a-fA-F0-9]{24}$" },
+          assignedTo: {
+            type: "string",
+            pattern: "^[a-fA-F0-9]{24}$",
+            nullable: true,
+          },
+          dueDate: { type: "string", format: "date-time", nullable: true },
         },
       },
       TaskInput: {
@@ -158,8 +230,10 @@ export const openapiDocument = {
       get: {
         tags: ["Users"],
         summary: "Get users",
+        security: [{ bearerAuth: [] }],
         responses: {
           "200": { description: "Users returned successfully" },
+          "401": { description: "Authentication required" },
         },
       },
       post: {
@@ -192,8 +266,10 @@ export const openapiDocument = {
       get: {
         tags: ["Users"],
         summary: "Get a user by ID",
+        security: [{ bearerAuth: [] }],
         responses: {
           "200": { description: "User found" },
+          "401": { description: "Authentication required" },
           "400": { description: "Invalid ID" },
           "404": { description: "User not found" },
         },
@@ -225,6 +301,7 @@ export const openapiDocument = {
           "201": { description: "Project created" },
           "400": { description: "Validation failed" },
           "401": { description: "Authentication required" },
+          "404": { description: "Member not found" },
         },
       },
     },
@@ -248,38 +325,53 @@ export const openapiDocument = {
           "401": { description: "Authentication required" },
         },
       },
-      patch: {
+      put: {
         tags: ["Projects"],
-        summary: "Update a project",
+        summary: "Replace a project (full update)",
+        description: "All fields must be sent. The owner cannot be changed.",
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
             "application/json": {
-              schema: {
-                type: "object",
-                minProperties: 1,
-                properties: {
-                  name: { type: "string", maxLength: 100 },
-                  description: { type: "string", maxLength: 1000 },
-                },
-              },
+              schema: { $ref: "#/components/schemas/ProjectReplaceInput" },
             },
           },
         },
         responses: {
           "200": { description: "Project updated" },
-          "400": { description: "Validation failed" },
-          "404": { description: "Project not found" },
+          "400": { description: "Validation failed or invalid ID" },
+          "404": { description: "Project or member not found" },
+          "401": { description: "Authentication required" },
+        },
+      },
+      patch: {
+        tags: ["Projects"],
+        summary: "Update a project (partial update)",
+        description: "Only the fields that are sent are changed.",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ProjectUpdateInput" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "Project updated" },
+          "400": { description: "Validation failed or invalid ID" },
+          "404": { description: "Project or member not found" },
           "401": { description: "Authentication required" },
         },
       },
       delete: {
         tags: ["Projects"],
         summary: "Delete a project",
+        description: "Also deletes all tasks of the project.",
         security: [{ bearerAuth: [] }],
         responses: {
-          "200": { description: "Project deleted" },
+          "204": { description: "Project deleted" },
           "404": { description: "Project not found" },
           "401": { description: "Authentication required" },
         },
@@ -311,6 +403,7 @@ export const openapiDocument = {
           "201": { description: "Task created" },
           "400": { description: "Validation failed" },
           "401": { description: "Authentication required" },
+          "404": { description: "Project or assigned user not found" },
         },
       },
     },
@@ -334,22 +427,43 @@ export const openapiDocument = {
           "401": { description: "Authentication required" },
         },
       },
-      patch: {
+      put: {
         tags: ["Tasks"],
-        summary: "Update a task",
+        summary: "Replace a task (full update)",
+        description: "All fields must be sent; use null for no description, assigned user or due date.",
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/TaskInput" },
+              schema: { $ref: "#/components/schemas/TaskReplaceInput" },
             },
           },
         },
         responses: {
           "200": { description: "Task updated" },
-          "400": { description: "Validation failed" },
-          "404": { description: "Task not found" },
+          "400": { description: "Validation failed or invalid ID" },
+          "404": { description: "Task, project or assigned user not found" },
+          "401": { description: "Authentication required" },
+        },
+      },
+      patch: {
+        tags: ["Tasks"],
+        summary: "Update a task (partial update)",
+        description: "Only the fields that are sent are changed; null clears a field.",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/TaskUpdateInput" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "Task updated" },
+          "400": { description: "Validation failed or invalid ID" },
+          "404": { description: "Task, project or assigned user not found" },
           "401": { description: "Authentication required" },
         },
       },
