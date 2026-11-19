@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 
 import app from "../src/app";
 import { Project } from "../src/models/Project";
+import { User } from "../src/models/User";
 import { JWT_SECRET } from "../src/config/env";
 
 const testUserId = new Types.ObjectId().toString();
@@ -22,9 +23,19 @@ if (!testUri) {
   throw new Error("MONGODB_TEST_URI is not defined in .env");
 }
 
+const memberEmail = `member-${Date.now()}@example.com`;
+let memberId = "";
+
 describe("Projects API integration tests", () => {
   beforeAll(async () => {
     await mongoose.connect(testUri);
+
+    const member = await User.create({
+      name: "Member",
+      email: memberEmail,
+      password: "hashed-password",
+    });
+    memberId = member._id.toString();
   });
 
   beforeEach(async () => {
@@ -33,7 +44,51 @@ describe("Projects API integration tests", () => {
 
   afterAll(async () => {
     await Project.deleteMany({});
+    await User.deleteMany({ email: memberEmail });
     await mongoose.disconnect();
+  });
+
+  it("should create a project with members", async () => {
+    const response = await request(app)
+      .post("/api/projects")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "Team Project", members: [memberId, memberId] });
+
+    expect(response.status).toBe(201);
+    expect(response.body.members).toEqual([memberId]);
+  });
+
+  it("should reject a member that does not exist", async () => {
+    const response = await request(app)
+      .post("/api/projects")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "Team Project", members: [new Types.ObjectId().toString()] });
+
+    expect(response.status).toBe(404);
+  });
+
+  it("should update project members with PATCH", async () => {
+    const project = await Project.create({
+      name: "Project",
+      owner: testUserId,
+    });
+
+    const response = await request(app)
+      .patch(`/api/projects/${project._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ members: [memberId] });
+
+    expect(response.status).toBe(200);
+    expect(response.body.members[0]._id).toBe(memberId);
+  });
+
+  it("should reject an invalid member ID", async () => {
+    const response = await request(app)
+      .post("/api/projects")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "Team Project", members: ["not-an-id"] });
+
+    expect(response.status).toBe(400);
   });
 
   it("should create a project", async () => {
@@ -104,7 +159,7 @@ describe("Projects API integration tests", () => {
     const response = await request(app)
       .put(`/api/projects/${project._id}`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ name: "New Project Name", description: "New description" });
+      .send({ name: "New Project Name", description: "New description", members: [] });
 
     expect(response.status).toBe(200);
     expect(response.body.name).toBe("New Project Name");
@@ -129,7 +184,7 @@ describe("Projects API integration tests", () => {
     const response = await request(app)
       .put(`/api/projects/${new Types.ObjectId()}`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ name: "Missing", description: "" });
+      .send({ name: "Missing", description: "", members: [] });
 
     expect(response.status).toBe(404);
   });

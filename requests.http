@@ -99,7 +99,26 @@ Content-Type: application/json
 
 {
   "name": "Replaced REST Client Project",
-  "description": "Full update using PUT"
+  "description": "Full update using PUT",
+  "members": ["{{userId}}"]
+}
+
+### 12c. Add members to project (PATCH)
+PATCH {{baseUrl}}/api/projects/{{projectId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "members": ["{{userId}}"]
+}
+
+### 12d. Add a member that does not exist - should fail (404)
+PATCH {{baseUrl}}/api/projects/{{projectId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "members": ["507f1f77bcf86cd799439011"]
 }
 
 ### 12b. Replace project with a missing field - should fail (400)

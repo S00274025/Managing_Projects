@@ -2,7 +2,13 @@ import { Request, Response } from "express";
 import { Types } from "mongoose";
 import { Project } from "../models/Project";
 import { Task } from "../models/Task";
+import { User } from "../models/User";
 import { AuthRequest } from "../middleware/authMiddleware";
+
+const membersExist = async (members: string[]): Promise<boolean> => {
+    const count = await User.countDocuments({ _id: { $in: members } });
+    return count === members.length;
+};
 
 export const createProject = async (
     req: Request,
@@ -12,6 +18,13 @@ export const createProject = async (
         const { name, description, members } = req.body;
         
         const owner = req.body.owner ?? (req as AuthRequest).userId;
+
+        if (members && !(await membersExist(members))) {
+            res.status(404).json({
+                message: "Member not found"
+            });
+            return;
+        }
 
         const project = await Project.create({
             name,
@@ -108,6 +121,13 @@ export const updateProject = async (
         if (!projectId || !Types.ObjectId.isValid(projectId)) {
             res.status(400).json({
                 message: "Invalid project ID"
+            });
+            return;
+        }
+
+        if (members && !(await membersExist(members))) {
+            res.status(404).json({
+                message: "Member not found"
             });
             return;
         }
