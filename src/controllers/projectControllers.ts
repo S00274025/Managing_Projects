@@ -10,7 +10,7 @@ export const createProject = async (
 ): Promise<void> => {
     try {
         const { name, description, members } = req.body;
-        // Part 2: if no owner is sent, the logged in user (from the JWT) is the owner
+        
         const owner = req.body.owner ?? (req as AuthRequest).userId;
 
         const project = await Project.create({
@@ -35,11 +35,11 @@ export const getProjects = async (
     res: Response
 ): Promise<void> => {
     try {
-        // Part 2: optional ?search=text filter on the project name (case insensitive)
+        
         const filter: Record<string, unknown> = {};
 
         if (typeof req.query.search === "string" && req.query.search.trim()) {
-            // escape regex special characters so the user's text is matched literally
+        
             const escaped = req.query.search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
             filter.name = { $regex: escaped, $options: "i" };
         }
@@ -168,8 +168,7 @@ export const deleteProject = async (
             return;
         }
 
-        // Part 2: also delete the tasks that belonged to this project,
-        // otherwise they would be left pointing at a project that no longer exists
+       
         await Task.deleteMany({ project: projectId });
 
         res.status(204).send();

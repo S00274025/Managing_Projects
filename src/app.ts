@@ -11,8 +11,7 @@ import { openapiDocument } from "./docs/openapi";
 
 const app = express();
 
-// Part 2: allow the Angular client (a different origin) to call this API.
-// Only the client URL from .env is allowed, not every origin.
+
 app.use(cors({ origin: CLIENT_URL }));
 
 app.use(express.json());
