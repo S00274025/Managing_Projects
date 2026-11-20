@@ -14,14 +14,12 @@ export const createProjectSchema = z.object({
   members: membersSchema.optional(),
 });
 
-// full update
 export const replaceProjectSchema = z.object({
   name: z.string().trim().min(1, "Project name is required").max(100),
   description: z.string().max(1000),
   members: membersSchema,
 });
 
-// partial update
 export const updateProjectSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
   description: z.string().max(1000).optional(),

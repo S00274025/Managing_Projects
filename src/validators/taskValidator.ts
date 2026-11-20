@@ -16,7 +16,6 @@ export const createTaskSchema = z.object({
   dueDate: z.iso.datetime().optional(),
 });
 
-// full update
 export const replaceTaskSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
   description: z.string().max(2000).nullable(),
@@ -27,7 +26,6 @@ export const replaceTaskSchema = z.object({
   dueDate: z.iso.datetime().nullable(),
 });
 
-// partial update
 export const updateTaskSchema = z.object({
   title: z.string().trim().min(1).max(200).optional(),
   description: z.string().max(2000).nullable().optional(),

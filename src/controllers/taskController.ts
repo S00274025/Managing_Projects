@@ -2,8 +2,70 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import { Task } from "../models/Task";
-import { Project } from "../models/Project";
 import { User } from "../models/User";
+import { AuthRequest } from "../middleware/authMiddleware";
+import {
+  checkProjectRole,
+  getProjectRole,
+  visibleProjectIds,
+} from "../utils/projectAccess";
+
+const currentUserId = (req: Request): string => (req as AuthRequest).userId ?? "";
+
+const checkAssignee = async (
+  projectId: string,
+  assignedTo: string,
+  res: Response
+): Promise<boolean> => {
+  const assignedUser = await User.findById(assignedTo);
+
+  if (!assignedUser) {
+    res.status(404).json({
+      message: "Assigned user not found",
+    });
+    return false;
+  }
+
+  const role = await getProjectRole(projectId, assignedTo);
+
+  if (role === "none" || role === "not_found") {
+    res.status(400).json({
+      message: "Assigned user is not a member of this project",
+    });
+    return false;
+  }
+
+  return true;
+};
+
+const checkTaskAccess = async (
+  taskId: string,
+  req: Request,
+  res: Response
+): Promise<string | null> => {
+  const task = await Task.findById(taskId).select("project").lean();
+
+  if (!task) {
+    res.status(404).json({
+      message: "Task not found",
+    });
+    return null;
+  }
+
+  const projectId = task.project.toString();
+  const role = await getProjectRole(projectId, currentUserId(req));
+
+  if (role === "not_found") {
+    res.status(404).json({
+      message: "Task not found",
+    });
+    return null;
+  }
+
+  if (!checkProjectRole(role, res)) return null;
+
+  return projectId;
+};
 
 export const createTask = async (
   req: Request,
@@ -20,24 +82,11 @@ export const createTask = async (
       dueDate,
     } = req.body;
 
-    const projectExists = await Project.findById(project);
+    const role = await getProjectRole(project, currentUserId(req));
+    if (!checkProjectRole(role, res)) return;
 
-    if (!projectExists) {
-      res.status(404).json({
-        message: "Project not found",
-      });
-      return;
-    }
-
-    if (assignedTo !== undefined) {
-      const assignedUser = await User.findById(assignedTo);
-
-      if (!assignedUser) {
-        res.status(404).json({
-          message: "Assigned user not found",
-        });
-        return;
-      }
+    if (assignedTo !== undefined && assignedTo !== null) {
+      if (!(await checkAssignee(project, assignedTo, res))) return;
     }
 
     const task = await Task.create({
@@ -74,7 +123,12 @@ export const getTasks = async (
         return;
       }
 
+      const role = await getProjectRole(req.query.project, currentUserId(req));
+      if (!checkProjectRole(role, res)) return;
+
       filter.project = req.query.project;
+    } else {
+      filter.project = { $in: await visibleProjectIds(currentUserId(req)) };
     }
 
     if (typeof req.query.status === "string") {
@@ -118,6 +172,8 @@ export const getTaskById = async (
       return;
     }
 
+    if (!(await checkTaskAccess(taskId, req, res))) return;
+
     const task = await Task.findById(taskId)
       .populate("project", "name")
       .populate("assignedTo", "name email");
@@ -153,28 +209,19 @@ export const updateTask = async (
       return;
     }
 
+    const currentProjectId = await checkTaskAccess(taskId, req, res);
+    if (!currentProjectId) return;
+
     const updates: Record<string, unknown> = { ...req.body };
 
     if (updates.project !== undefined) {
-      const projectExists = await Project.findById(updates.project);
-
-      if (!projectExists) {
-        res.status(404).json({
-          message: "Project not found",
-        });
-        return;
-      }
+      const role = await getProjectRole(String(updates.project), currentUserId(req));
+      if (!checkProjectRole(role, res)) return;
     }
 
     if (updates.assignedTo) {
-      const assignedUser = await User.findById(updates.assignedTo);
-
-      if (!assignedUser) {
-        res.status(404).json({
-          message: "Assigned user not found",
-        });
-        return;
-      }
+      const projectId = updates.project !== undefined ? String(updates.project) : currentProjectId;
+      if (!(await checkAssignee(projectId, String(updates.assignedTo), res))) return;
     }
 
     if (typeof updates.dueDate === "string") {
@@ -218,6 +265,8 @@ export const deleteTask = async (
       });
       return;
     }
+
+    if (!(await checkTaskAccess(taskId, req, res))) return;
 
     const task = await Task.findByIdAndDelete(taskId);
 

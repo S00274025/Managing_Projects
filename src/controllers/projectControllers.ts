@@ -4,6 +4,13 @@ import { Project } from "../models/Project";
 import { Task } from "../models/Task";
 import { User } from "../models/User";
 import { AuthRequest } from "../middleware/authMiddleware";
+import {
+    checkProjectRole,
+    getProjectRole,
+    visibleProjectsFilter
+} from "../utils/projectAccess";
+
+const currentUserId = (req: Request): string => (req as AuthRequest).userId ?? "";
 
 const membersExist = async (members: string[]): Promise<boolean> => {
     const count = await User.countDocuments({ _id: { $in: members } });
@@ -17,7 +24,7 @@ export const createProject = async (
     try {
         const { name, description, members } = req.body;
         
-        const owner = req.body.owner ?? (req as AuthRequest).userId;
+        const owner = currentUserId(req);
 
         if (members && !(await membersExist(members))) {
             res.status(404).json({
@@ -49,7 +56,8 @@ export const getProjects = async (
 ): Promise<void> => {
     try {
         
-        const filter: Record<string, unknown> = {};
+        
+        const filter: Record<string, unknown> = visibleProjectsFilter(currentUserId(req));
 
         if (typeof req.query.search === "string" && req.query.search.trim()) {
         
@@ -88,6 +96,9 @@ export const getProjectById = async (
             return;
         }
 
+        const role = await getProjectRole(projectId, currentUserId(req));
+        if (!checkProjectRole(role, res)) return;
+
         const project = await Project.findById(projectId)
             .populate("owner", "name email")
             .populate("members", "name email");
@@ -124,6 +135,10 @@ export const updateProject = async (
             });
             return;
         }
+
+       
+        const role = await getProjectRole(projectId, currentUserId(req));
+        if (!checkProjectRole(role, res, true)) return;
 
         if (members && !(await membersExist(members))) {
             res.status(404).json({
@@ -178,6 +193,9 @@ export const deleteProject = async (
             });
             return;
         }
+
+        const role = await getProjectRole(projectId, currentUserId(req));
+        if (!checkProjectRole(role, res, true)) return;
 
         const project = await Project.findByIdAndDelete(projectId);
 

@@ -47,7 +47,7 @@ export const openapiDocument = {
           owner: {
             type: "string",
             pattern: "^[a-fA-F0-9]{24}$",
-            description: "Defaults to the logged in user",
+            description: "Ignored - the owner is always the logged in user",
             example: "507f1f77bcf86cd799439011",
           },
           members: {
@@ -279,6 +279,7 @@ export const openapiDocument = {
       get: {
         tags: ["Projects"],
         summary: "Get projects",
+        description: "Only projects where the logged in user is the owner or a member. Optional ?search= filters by name.",
         security: [{ bearerAuth: [] }],
         responses: {
           "200": { description: "Projects returned successfully" },
@@ -321,6 +322,7 @@ export const openapiDocument = {
         security: [{ bearerAuth: [] }],
         responses: {
           "200": { description: "Project found" },
+          "403": { description: "Not the owner or a member of this project" },
           "404": { description: "Project not found" },
           "401": { description: "Authentication required" },
         },
@@ -341,6 +343,7 @@ export const openapiDocument = {
         responses: {
           "200": { description: "Project updated" },
           "400": { description: "Validation failed or invalid ID" },
+          "403": { description: "Only the project owner can do this" },
           "404": { description: "Project or member not found" },
           "401": { description: "Authentication required" },
         },
@@ -361,6 +364,7 @@ export const openapiDocument = {
         responses: {
           "200": { description: "Project updated" },
           "400": { description: "Validation failed or invalid ID" },
+          "403": { description: "Only the project owner can do this" },
           "404": { description: "Project or member not found" },
           "401": { description: "Authentication required" },
         },
@@ -372,6 +376,7 @@ export const openapiDocument = {
         security: [{ bearerAuth: [] }],
         responses: {
           "204": { description: "Project deleted" },
+          "403": { description: "Only the project owner can do this" },
           "404": { description: "Project not found" },
           "401": { description: "Authentication required" },
         },
@@ -381,6 +386,7 @@ export const openapiDocument = {
       get: {
         tags: ["Tasks"],
         summary: "Get tasks",
+        description: "Only tasks from projects the user can see. Optional ?project= and ?status= filters.",
         security: [{ bearerAuth: [] }],
         responses: {
           "200": { description: "Tasks returned successfully" },
@@ -403,6 +409,7 @@ export const openapiDocument = {
           "201": { description: "Task created" },
           "400": { description: "Validation failed" },
           "401": { description: "Authentication required" },
+          "403": { description: "Not a member of the project" },
           "404": { description: "Project or assigned user not found" },
         },
       },
@@ -423,6 +430,7 @@ export const openapiDocument = {
         security: [{ bearerAuth: [] }],
         responses: {
           "200": { description: "Task found" },
+          "403": { description: "Not a member of the project" },
           "404": { description: "Task not found" },
           "401": { description: "Authentication required" },
         },
@@ -443,6 +451,7 @@ export const openapiDocument = {
         responses: {
           "200": { description: "Task updated" },
           "400": { description: "Validation failed or invalid ID" },
+          "403": { description: "Not a member of the project" },
           "404": { description: "Task, project or assigned user not found" },
           "401": { description: "Authentication required" },
         },
@@ -463,6 +472,7 @@ export const openapiDocument = {
         responses: {
           "200": { description: "Task updated" },
           "400": { description: "Validation failed or invalid ID" },
+          "403": { description: "Not a member of the project" },
           "404": { description: "Task, project or assigned user not found" },
           "401": { description: "Authentication required" },
         },
@@ -473,6 +483,7 @@ export const openapiDocument = {
         security: [{ bearerAuth: [] }],
         responses: {
           "200": { description: "Task deleted" },
+          "403": { description: "Not a member of the project" },
           "404": { description: "Task not found" },
           "401": { description: "Authentication required" },
         },
